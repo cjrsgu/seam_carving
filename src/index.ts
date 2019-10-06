@@ -1,10 +1,11 @@
-const root: HTMLElement = document.getElementById('root');
-const canvas: HTMLCanvasElement = document.createElement('canvas');
+import SeamCarving from './SeamCarving';
 
-canvas.width = 600;
-canvas.height = 600;
+const imageSrc = require('../img/Image.jpeg');
 
-root.appendChild(canvas);
+const seamCarving = new SeamCarving();
 
-const context: CanvasRenderingContext2D = canvas.getContext('2d');
+seamCarving.init(imageSrc)
+  .then(() => {
 
+    seamCarving.sobel();
+  });
