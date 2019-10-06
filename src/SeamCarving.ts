@@ -32,18 +32,22 @@ class SeamCarving {
 
       this.context.drawImage(this.image, 0, 0);
 
-      this.imageData = this.context.getImageData(
-        0,
-        0,
-        this.canvas.width,
-        this.canvas.height,
-      ).data;
+      this.updateImageData();
 
       resolve();
     };
 
     this.image.src = src;
   });
+
+  updateImageData = (): void => {
+    this.imageData = this.context.getImageData(
+      0,
+      0,
+      this.canvas.width,
+      this.canvas.height,
+    ).data;
+  }
 
   transformCoordinates = (x: number, y: number): number => (
     (x + this.image.width * y) * 4
@@ -146,6 +150,7 @@ class SeamCarving {
     const imageData: ImageData = new ImageData(clampedArray, width, height);
 
     this.context.putImageData(imageData, 0, 0);
+    this.updateImageData();
   }
 }
 
