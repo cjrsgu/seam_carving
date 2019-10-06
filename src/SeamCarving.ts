@@ -86,20 +86,20 @@ class SeamCarving {
       width: number,
     } = this.image;
 
-    const kernelX: Array<Array<number>> = [
+    const kernelX: number[][] = [
       [-1, 0, 1],
       [-2, 0, 2],
       [-1, 0, 1],
     ];
 
-    const kernelY: Array<Array<number>> = [
+    const kernelY: number[][] = [
       [-1, -2, -1],
       [0, 0, 0],
       [1, 2, 1],
     ];
 
-    const sobelData: Array<number> = [];
-    const grayscaleData: Array<number> = [];
+    const sobelData: number[] = [];
+    const grayscaleData: number[] = [];
 
     for (let y: number = 0; y < height; y += 1) {
       for (let x: number = 0; x < width; x += 1) {
@@ -149,6 +149,79 @@ class SeamCarving {
 
     const imageData: ImageData = new ImageData(clampedArray, width, height);
 
+    this.context.putImageData(imageData, 0, 0);
+    this.updateImageData();
+  }
+
+  seamCarving = (): void => {
+    const {
+      height,
+      width,
+    }: {
+      height: number,
+      width: number,
+    } = this.image;
+
+    const powers: number[][] = [];
+
+    for (let y: number = 0; y < height; y += 1) {
+      powers[y] = [];
+      for (let x: number = 0; x < width; x += 1) {
+        const energy: number = this.getPixel(x, y).red;
+
+        if (y === 0) {
+          powers[y].push({ energy, color: this.getPixel(x, y).red });
+        } else {
+          let min: number;
+
+          if (x === 0) {
+            min = Math.min(powers[y - 1][x].energy, powers[y - 1][x + 1].energy);
+          } else if (x === width - 1) {
+            min = Math.min(powers[y - 1][x - 1].energy, powers[y - 1][x].energy);
+          } else {
+            min = Math.min(powers[y - 1][x - 1].energy, powers[y - 1][x].energy, powers[y - 1][x + 1].energy);
+          }
+
+          powers[y].push({energy: energy + min, color: this.getPixel(x, y).red });
+        }
+      }
+    }
+
+    let min: number;
+    let index: number;
+
+    for (let i: number = 0; i < 100; i += 1) {
+      for (let y: number = height - 1; y > 0; y -= 1) {
+        if (y === height - 1) {
+          const array = powers[y].map(p => p.energy);
+          min = Math.min(...array);
+        } else {
+          index = powers[y + 1].findIndex((power: number) => power.energy === min);
+
+          // console.log(index);
+          powers[y - 1].splice(index, 1);
+          if (index === 0) {
+            min = Math.min(powers[y][index].energy, powers[y][index + 1].energy);
+          } else if (index === width - 1) {
+            min = Math.min(powers[y][index - 1].energy, powers[y][index].energy);
+          } else {
+            min = Math.min(powers[y][index - 1].energy, powers[y][index].energy, powers[y][index + 1].energy);
+          }
+        }
+      }
+    }
+
+    const im: number[] = [];
+    for (let y: number = 0; y < height; y += 1) {
+      for (let x: number = 0; x < powers[0].length; x += 1) {
+        im.push(powers[y][x].color, powers[y][x].color, powers[y][x].color, 255);
+      }
+    }
+    
+    const clampedArray: Uint8ClampedArray = new Uint8ClampedArray(im);
+
+    const imageData: ImageData = new ImageData(clampedArray, powers[0].length, height);
+    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.context.putImageData(imageData, 0, 0);
     this.updateImageData();
   }
