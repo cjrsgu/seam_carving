@@ -153,7 +153,9 @@ class SeamCarving {
     this.updateImageData();
   }
 
-  seamCarving = (): void => {
+  seamCarving = () => {
+    for (let i: number = 0; i < 50; i += 1) {
+console.log(i);
     const {
       height,
       width,
@@ -182,34 +184,62 @@ class SeamCarving {
             min = Math.min(powers[y - 1][x - 1].energy, powers[y - 1][x].energy, powers[y - 1][x + 1].energy);
           }
 
-          powers[y].push({energy: energy + min, color: this.getPixel(x, y).red });
+          powers[y].push({energy: energy + min, color: this.getPixel(x, y).red, ind: x });
         }
       }
     }
 
-    let min: number;
-    let index: number;
+    let min: number = Number.MAX_VALUE;
+    let index: number = 0;
 
-    for (let i: number = 0; i < 100; i += 1) {
+    
       for (let y: number = height - 1; y > 0; y -= 1) {
         if (y === height - 1) {
-          const array = powers[y].map(p => p.energy);
-          min = Math.min(...array);
+          powers[y].forEach((p, index1) => {
+            if (p.energy < min) {
+              min = p.energy;
+              index = p.ind - i - 1;
+            }
+          });
         } else {
-          index = powers[y + 1].findIndex((power: number) => power.energy === min);
-
-          // console.log(index);
-          powers[y - 1].splice(index, 1);
-          if (index === 0) {
-            min = Math.min(powers[y][index].energy, powers[y][index + 1].energy);
-          } else if (index === width - 1) {
-            min = Math.min(powers[y][index - 1].energy, powers[y][index].energy);
+          if (index <= 0) {
+            [powers[y][index-1], powers[y][index]].forEach((p, index1) => {
+              if (p.energy < min) {
+                min = p.energy;
+                index = p.ind - i - 1;
+              }
+            });
+          } else if (index >= powers[y].length - 1) {
+            [powers[y][index - 2], powers[y][index-1]].forEach((p, index1) => {
+              if (!p) {
+                console.log(p)
+                console.log(123, p);
+                console.log(index)
+                console.log(powers[y])
+              }
+              if (p.energy < min) {
+                min = p.energy;
+                index = p.ind - i - 1;
+              }
+            });
           } else {
-            min = Math.min(powers[y][index - 1].energy, powers[y][index].energy, powers[y][index + 1].energy);
+            [powers[y][index - 2], powers[y][index-1], powers[y][index]].forEach((p, index1) => {
+              if (!p) console.log(p);
+              if (p.energy < min) {
+                min = p.energy;
+                index = p.ind - i - 1;
+              }
+            });
           }
+          if (index <= 0) index = 0;
+
         }
+        powers[y - 1].splice(index, 1);
+        // powers[y - 1][index].color = 255;
+        // powers[y - 1][index].energy = Number.MAX_VALUE;
+        // powers[y - 1].splice(index, 1);
       }
-    }
+   
 
     const im: number[] = [];
     for (let y: number = 0; y < height; y += 1) {
@@ -224,6 +254,7 @@ class SeamCarving {
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.context.putImageData(imageData, 0, 0);
     this.updateImageData();
+  }
   }
 }
 
